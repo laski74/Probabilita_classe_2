@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Probabilita - laboratorio interattivo per la 2a</title>
+  <style>
+    :root {
+      --bg: #090b10;
+      --panel: #121722;
+      --panel-2: #172033;
+      --ink: #f4f7fb;
+      --muted: #a8b3c7;
+      --line: rgba(255,255,255,0.12);
+      --cyan: #25d7ff;
+      --mint: #45f0a7;
+      --amber: #ffd166;
+      --pink: #ff5ea8;
+      --red: #ff6b6b;
+      --violet: #a78bfa;
+      --blue: #60a5fa;
+      --shadow: 0 18px 70px rgba(0, 0, 0, 0.42);
+      --radius: 8px;
+      --font: Inter, Segoe UI, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at 18% 8%, rgba(37, 215, 255, 0.18), transparent 28rem),
+        radial-gradient(circle at 86% 14%, rgba(255, 94, 168, 0.14), transparent 24rem),
+        linear-gradient(180deg, #090b10 0%, #0d1119 46%, #07080d 100%);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    body.light-mode {
+      --bg: #f6f8fc;
+      --panel: #ffffff;
+      --panel-2: #eaf0f8;
+      --ink: #111827;
+      --muted: #4b5563;
+      --line: rgba(17, 24, 39, 0.16);
+      --cyan: #0077b6;
+      --mint: #0f9f6e;
+      --amber: #b7791f;
+      --pink: #c0266f;
+      --red: #c24141;
+      --violet: #6d4bd8;
+      --blue: #2563eb;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(0, 119, 182, 0.14), transparent 28rem),
+        radial-gradient(circle at 86% 14%, rgba(192, 38, 111, 0.10), transparent 24rem),
+        linear-gradient(180deg, #f8fbff 0%, #eef3fa 46%, #f7f9fd 100%);
+    }
+
+    body.dsa-mode {
+      font-family: Arial, sans-serif;
+      line-height: 1.85;
+      letter-spacing: 0.02em;
+    }
+
+    a { color: var(--cyan); }
+    button, input, select { font: inherit; }
+    .page { min-height: 100vh; }
+
+    header.hero {
+      min-height: 86vh;
+      display: grid;
+      align-items: end;
+      padding: 2rem clamp(1rem, 4vw, 4rem) 3rem;
+      position: relative;
+      border-bottom: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.35));
+      pointer-events: none;
+    }
+
+    body.light-mode .hero::before {
+      background:
+        linear-gradient(rgba(17,24,39,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17,24,39,0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .hero-grid {
+      position: relative;
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: clamp(1.5rem, 4vw, 4rem);
+      align-items: end;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: var(--mint);
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 820px;
+      font-size: clamp(3rem, 8vw, 7rem);
+      line-height: 0.94;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      max-width: 760px;
+      margin: 1.25rem 0 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.07);
+      color: var(--ink);
+      padding: 0.78rem 1rem;
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 44px;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .btn:hover, .btn:focus-visible {
+      transform: translateY(-1px);
+      border-color: rgba(37,215,255,0.7);
+      background: rgba(37,215,255,0.11);
+      outline: none;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--cyan), var(--mint));
+      color: #031018;
+      font-weight: 850;
+      border-color: transparent;
+    }
+
+    .lab-panel {
+      background: rgba(18,23,34,0.82);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      backdrop-filter: blur(12px);
+    }
+
+    body.light-mode .lab-panel {
+      background: rgba(255,255,255,0.86);
+    }
+
+    .prob-meter {
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .meter-row {
+      display: grid;
+      grid-template-columns: 9rem 1fr 4.2rem;
+      gap: 0.65rem;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .bar {
+      height: 13px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: var(--w);
+      background: linear-gradient(90deg, var(--cyan), var(--mint));
+      border-radius: 999px;
+    }
+
+    .coin-stage {
+      margin-top: 1rem;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.55rem;
+    }
+
+    .coin {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 2px solid rgba(255,255,255,0.18);
+      background: radial-gradient(circle at 32% 22%, #fff6b8, #f4b942 45%, #8b5d00);
+      color: #201200;
+      font-weight: 900;
+      box-shadow: inset 0 0 12px rgba(255,255,255,0.35), 0 10px 24px rgba(0,0,0,0.28);
+    }
+
+    .coin.tail {
+      background: radial-gradient(circle at 32% 22%, #d9fcff, #4fc3f7 45%, #125170);
+      color: #031018;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(9, 11, 16, 0.86);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    body.light-mode .topbar {
+      background: rgba(248, 251, 255, 0.88);
+    }
+
+    nav {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 0.65rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      padding-bottom: 0.15rem;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.45rem 0.65rem;
+      border-radius: var(--radius);
+      white-space: nowrap;
+      font-size: 0.92rem;
+    }
+
+    .nav-links a:hover, .nav-links a:focus-visible {
+      color: var(--ink);
+      background: rgba(255,255,255,0.08);
+      outline: none;
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--muted);
+      white-space: nowrap;
+      user-select: none;
+      font-size: 0.9rem;
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .toggle input { inline-size: 1.2rem; block-size: 1.2rem; }
+
+    main {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: clamp(1rem, 4vw, 3rem) 1rem 5rem;
+    }
+
+    section {
+      margin-top: 3rem;
+      scroll-margin-top: 5rem;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 1rem;
+      align-items: end;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    h3 { margin: 0 0 0.65rem; font-size: 1.22rem; line-height: 1.25; }
+    h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+    .lead { color: var(--muted); max-width: 820px; margin: 0.75rem 0 0; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 1rem;
+    }
+
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .card, details.exercise, .exercise-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.035));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.22);
+    }
+
+    .card.accent-cyan { border-top: 3px solid var(--cyan); }
+    .card.accent-mint { border-top: 3px solid var(--mint); }
+    .card.accent-amber { border-top: 3px solid var(--amber); }
+    .card.accent-pink { border-top: 3px solid var(--pink); }
+    .card.accent-violet { border-top: 3px solid var(--violet); }
+
+    .formula {
+      background: #07111b;
+      border: 1px solid rgba(37,215,255,0.25);
+      border-left: 4px solid var(--cyan);
+      border-radius: var(--radius);
+      padding: 0.85rem;
+      margin: 0.85rem 0;
+      overflow-x: auto;
+    }
+
+    body.light-mode .formula {
+      background: #edf6ff;
+      border-color: rgba(0,119,182,0.24);
+    }
+
+    .callout {
+      border-left: 4px solid var(--amber);
+      background: rgba(255, 209, 102, 0.08);
+      padding: 0.85rem;
+      border-radius: var(--radius);
+      color: #ffe8a3;
+    }
+
+    body.light-mode .callout {
+      background: #fff7df;
+      color: #5f3b00;
+      border-left-color: #b7791f;
+    }
+
+    .mini-list {
+      margin: 0.7rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .mini-list li { margin: 0.28rem 0; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1.8rem;
+      padding: 0.2rem 0.55rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      font-size: 0.82rem;
+      font-weight: 750;
+    }
+
+    details.theory {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.045);
+      margin: 0.7rem 0;
+      overflow: hidden;
+    }
+
+    details.theory summary, details.exercise summary {
+      cursor: pointer;
+      color: var(--ink);
+      font-weight: 850;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    details.theory summary {
+      padding: 0.85rem 1rem;
+    }
+
+    details.theory summary::after, details.exercise summary::after {
+      content: "+";
+      color: var(--cyan);
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    details[open].theory summary::after, details[open].exercise summary::after {
+      content: "-";
+    }
+
+    .details-body {
+      padding: 0 1rem 1rem;
+      color: var(--muted);
+    }
+
+    .sim {
+      background: #0c121d;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+
+    body.light-mode .sim {
+      background: #ffffff;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+      align-items: center;
+      margin: 0.8rem 0;
+    }
+
+    .control-row label {
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    input[type="range"] { accent-color: var(--cyan); }
+    input[type="number"], select {
+      background: #070b12;
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 0.5rem;
+      width: 6rem;
+      min-height: 40px;
+    }
+
+    body.light-mode input[type="number"],
+    body.light-mode select {
+      background: #ffffff;
+    }
+
+    canvas {
+      width: 100%;
+      height: 220px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      display: block;
+    }
+
+    .dice-table {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.3rem;
+      margin-top: 0.75rem;
+    }
+
+    .dice-cell {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.045);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 0.86rem;
+    }
+
+    .dice-cell.hot {
+      background: rgba(69,240,167,0.18);
+      color: var(--mint);
+      border-color: rgba(69,240,167,0.38);
+    }
+
+    .venn {
+      position: relative;
+      min-height: 230px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      overflow: hidden;
+    }
+
+    .circle {
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      top: 30px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      border: 2px solid;
+      mix-blend-mode: screen;
+    }
+
+    .circle.a { left: calc(50% - 165px); background: rgba(37,215,255,0.22); border-color: var(--cyan); }
+    .circle.b { right: calc(50% - 165px); background: rgba(255,94,168,0.22); border-color: var(--pink); }
+    .venn-caption { position: absolute; bottom: 0.85rem; left: 1rem; right: 1rem; color: var(--muted); font-size: 0.9rem; }
+
+    .tree {
+      display: grid;
+      gap: 0.7rem;
+      color: var(--muted);
+    }
+
+    .tree-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .node {
+      padding: 0.6rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.05);
+      text-align: center;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      border-radius: var(--radius);
+      padding: 0.55rem 0.8rem;
+      cursor: pointer;
+      min-height: 40px;
+    }
+
+    .tab-btn.active {
+      color: #061018;
+      background: var(--mint);
+      border-color: transparent;
+      font-weight: 850;
+    }
+
+    .exercise-set { display: none; }
+    .exercise-set.active { display: grid; }
+
+    details.exercise, .exercise-card {
+      margin-bottom: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    details.exercise summary {
+      padding: 1rem;
+      background: rgba(255,255,255,0.035);
+    }
+
+    .exercise-title {
+      padding: 1rem;
+      margin: 0;
+      background: rgba(255,255,255,0.035);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .exercise-content { padding: 0 1rem 1rem; }
+    .tagline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin: 0.5rem 0 0.9rem;
+    }
+
+    .solution {
+      border-top: 1px solid var(--line);
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+
+    .solution-toggle {
+      margin-top: 1rem;
+    }
+
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+      margin: 0.7rem 0;
+    }
+
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 2.1rem;
+      margin: 0.55rem 0;
+      color: var(--muted);
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0.05rem;
+      width: 1.45rem;
+      height: 1.45rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(37,215,255,0.15);
+      color: var(--cyan);
+      font-weight: 900;
+      font-size: 0.8rem;
+    }
+
+    .print-note { color: var(--muted); font-size: 0.9rem; }
+
+    footer {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid, .section-head { grid-template-columns: 1fr; }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+      nav { align-items: flex-start; flex-direction: column; }
+      .meter-row { grid-template-columns: 7.3rem 1fr 3.6rem; }
+    }
+
+    @media (max-width: 560px) {
+      header.hero { min-height: 92vh; padding-inline: 1rem; }
+      .coin-stage { grid-template-columns: repeat(3, 1fr); }
+      .circle { width: 135px; height: 135px; }
+      .circle.a { left: calc(50% - 130px); }
+      .circle.b { right: calc(50% - 130px); }
+      .tree-row { grid-template-columns: 1fr; }
+      .dice-cell { font-size: 0.72rem; }
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .topbar, .hero-actions, .sim button, .tabs { display: none !important; }
+      header.hero { min-height: auto; border-bottom: 2px solid #111; }
+      .card, details.exercise, .exercise-card, details.theory, .lab-panel, .sim {
+        background: #fff !important;
+        color: #111 !important;
+        border-color: #777;
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      .lead, .details-body, .steps li, .print-note, .muted { color: #222 !important; }
+      details { display: block; }
+      details > * { display: block; }
+      details:not([open]) > :not(summary) { display: block; }
+    }
+  </style>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <div class="page">
+    <header class="hero" id="top">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">Laboratorio di matematica - classe seconda</div>
+          <h1>Probabilita senza nebbia</h1>
+          <p>Un percorso interattivo per capire, studiare e ripassare: prima si sperimenta con casi, monete, dadi e urne; poi si formalizza con formule, teoremi e strategie.</p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#lab">Inizia dal laboratorio</a>
+            <a class="btn" href="#teoria">Scheda teoria</a>
+            <a class="btn" href="#esercizi">Schede esercizi</a>
+          </div>
+        </div>
+        <div class="lab-panel" aria-label="Anteprima laboratorio">
+          <h3>Quattro idee da tenere accese</h3>
+          <div class="prob-meter">
+            <div class="meter-row"><span>Impossibile</span><div class="bar"><span style="--w:0%"></span></div><strong>0</strong></div>
+            <div class="meter-row"><span>Poco probabile</span><div class="bar"><span style="--w:18%"></span></div><strong>0,18</strong></div>
+            <div class="meter-row"><span>Equilibrato</span><div class="bar"><span style="--w:50%"></span></div><strong>0,50</strong></div>
+            <div class="meter-row"><span>Quasi certo</span><div class="bar"><span style="--w:88%"></span></div><strong>0,88</strong></div>
+            <div class="meter-row"><span>Certo</span><div class="bar"><span style="--w:100%"></span></div><strong>1</strong></div>
+          </div>
+          <div class="coin-stage" id="heroCoins" aria-hidden="true"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="topbar">
+      <nav aria-label="Navigazione principale">
+        <div class="nav-links">
+          <a href="#lab">Laboratorio</a>
+          <a href="#teoria">Teoria</a>
+          <a href="#metodi">Metodi</a>
+          <a href="#esercizi">Esercizi</a>
+          <a href="#mappa">Mappa finale</a>
+        </div>
+        <div class="nav-controls">
+          <label class="toggle">
+            <input id="themeToggle" type="checkbox">
+            Modalita chiara
+          </label>
+          <label class="toggle">
+            <input id="dsaToggle" type="checkbox">
+            Modalita DSA/BES
+          </label>
+        </div>
+      </nav>
+    </div>
+
+    <main>
+      <section id="lab">
+        <div class="section-head">
+          <div>
+            <h2>1. Learning by doing</h2>
+            <p class="lead">Prima domanda: quando diciamo “probabile”, stiamo contando, stimando da dati, o scommettendo sulla nostra informazione? Gioca con le simulazioni e prova a prevedere prima di calcolare.</p>
+          </div>
+          <span class="pill">Agisci - osserva - formalizza</span>
+        </div>
+
+        <div class="grid">
+          <div class="span-6 sim">
+            <h3>Simulazione: legge dei grandi numeri</h3>
+            <p class="lead">Lancia una moneta molte volte. La frequenza relativa di testa oscilla, ma tende ad avvicinarsi a \(0{,}5\).</p>
+            <div class="control-row">
+              <label>Lanci <input id="coinRuns" type="number" min="10" max="5000" step="10" value="200"></label>
+              <button class="btn primary" id="runCoins" type="button">Simula</button>
+              <button class="btn" id="resetCoins" type="button">Azzera</button>
+            </div>
+            <canvas id="coinCanvas" width="720" height="260" aria-label="Grafico frequenza relativa testa"></canvas>
+            <p id="coinStats" class="print-note">Nessun lancio ancora.</p>
+          </div>
+
+          <div class="span-6 sim">
+            <h3>Dadi: non tutti i risultati “a parole” pesano uguale</h3>
+            <p class="lead">Con due dadi, le coppie ordinate sono 36. Le somme non sono equiprobabili: 7 puo uscire in 6 modi, 2 in un solo modo.</p>
+            <div class="control-row">
+              <label>Evento
+                <select id="diceEvent">
+                  <option value="sum7">somma uguale a 7</option>
+                  <option value="sumgt8">somma maggiore di 8</option>
+                  <option value="productEven">prodotto pari</option>
+                  <option value="same">doppio</option>
+                </select>
+              </label>
+            </div>
+            <div class="dice-table" id="diceTable" aria-label="Tabella dei 36 esiti di due dadi"></div>
+            <p id="diceResult" class="print-note"></p>
+          </div>
+
+          <div class="span-5 card accent-pink">
+            <h3>Prima di calcolare</h3>
+            <ol class="steps">
+              <li>Descrivi l'esperimento: che cosa succede?</li>
+              <li>Scrivi lo spazio campionario, cioe tutti gli esiti possibili.</li>
+              <li>Trasforma la richiesta in un evento.</li>
+              <li>Controlla se i casi sono equiprobabili.</li>
+              <li>Solo alla fine applica la formula.</li>
+            </ol>
+          </div>
+
+          <div class="span-7 card accent-cyan">
+            <h3>Il tranello piu comune</h3>
+            <p>“Escono due teste”, “esce una testa e una croce”, “escono due croci”: sembrano tre casi, ma non sono tutti ugualmente possibili. Con due monete gli esiti ordinati sono:</p>
+            <div class="formula">\[\Omega=\{TT,TC,CT,CC\}\]</div>
+            <p>Quindi \(P(\text{due teste})=\frac{1}{4}\), non \(\frac{1}{3}\). La probabilita classica funziona bene solo se i casi elementari hanno lo stesso peso.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="teoria">
+        <div class="section-head">
+          <div>
+            <h2>2. Scheda teoria completa</h2>
+            <p class="lead">Ogni blocco parte da un problema pratico, poi apre la formalizzazione. Le parti chiuse servono per studio, ripasso o recupero mirato.</p>
+          </div>
+          <span class="pill">Teoria a comparsa</span>
+        </div>
+
+        <div class="grid">
+          <article class="span-6 card accent-cyan">
+            <h3>A. Esperimenti, spazio campionario, eventi</h3>
+            <p><strong>Esperimento aleatorio:</strong> una situazione il cui esito non puo essere previsto con certezza, anche se conosciamo i risultati possibili.</p>
+            <div class="formula">\[\Omega=\text{insieme di tutti gli esiti possibili}\]</div>
+            <details class="theory" open>
+              <summary>Apri la teoria essenziale</summary>
+              <div class="details-body">
+                <p>Un <strong>evento</strong> e un sottoinsieme dello spazio campionario. Se lancio un dado, \(\Omega=\{1,2,3,4,5,6\}\). L'evento \(A=\) “esce un numero pari” e \(A=\{2,4,6\}\).</p>
+                <ul class="mini-list">
+                  <li><strong>Evento elementare:</strong> contiene un solo esito, per esempio \(\{4\}\).</li>
+                  <li><strong>Evento certo:</strong> coincide con \(\Omega\).</li>
+                  <li><strong>Evento impossibile:</strong> e l'insieme vuoto \(\varnothing\).</li>
+                  <li><strong>Evento aleatorio:</strong> puo verificarsi oppure no.</li>
+                </ul>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-6 card accent-mint">
+            <h3>B. Probabilita classica</h3>
+            <p>Quando tutti i casi elementari sono equiprobabili, la probabilita si calcola contando.</p>
+            <div class="formula">\[P(E)=\frac{\text{numero dei casi favorevoli}}{\text{numero dei casi possibili}}\]</div>
+            <details class="theory" open>
+              <summary>Quando posso usarla?</summary>
+              <div class="details-body">
+                <p>La parola “a caso” spesso suggerisce equiprobabilita, ma bisogna verificare. Estrarre una carta coperta da un mazzo ben mescolato produce casi equiprobabili; dire “somma dei due dadi” invece no, se i casi sono le somme.</p>
+                <p>I valori possibili di una probabilita stanno sempre tra 0 e 1:</p>
+                <div class="formula">\[0\le P(E)\le 1\]</div>
+                <p>In percentuale: \(0{,}25=25\%\), \(\frac{3}{5}=60\%\), \(1=100\%\).</p>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-6 card accent-amber">
+            <h3>C. Operazioni tra eventi</h3>
+            <div class="venn" aria-label="Diagramma di Venn per due eventi">
+              <div class="circle a">A</div>
+              <div class="circle b">B</div>
+              <div class="venn-caption">Unione: \(A\cup B\). Intersezione: \(A\cap B\). Contrario: \(\overline{A}\).</div>
+            </div>
+            <details class="theory" open>
+              <summary>Traduzione dal linguaggio naturale</summary>
+              <div class="details-body">
+                <ul class="mini-list">
+                  <li>“A oppure B” significa \(A\cup B\): accade A, accade B, oppure accadono entrambi.</li>
+                  <li>“A e B” significa \(A\cap B\): accadono entrambi.</li>
+                  <li>“Non A” significa \(\overline{A}\): accade il contrario di A.</li>
+                  <li>Due eventi sono <strong>incompatibili</strong> se non possono accadere insieme: \(A\cap B=\varnothing\).</li>
+                </ul>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-6 card accent-pink">
+            <h3>D. Teoremi della somma</h3>
+            <p>La probabilita di “A oppure B” richiede attenzione: se gli eventi si sovrappongono, la parte comune non va contata due volte.</p>
+            <div class="formula">\[P(A\cup B)=P(A)+P(B)-P(A\cap B)\]</div>
+            <details class="theory" open>
+              <summary>Casi speciali utili</summary>
+              <div class="details-body">
+                <p>Se A e B sono incompatibili, \(P(A\cap B)=0\), quindi:</p>
+                <div class="formula">\[P(A\cup B)=P(A)+P(B)\]</div>
+                <p>Per l'evento contrario:</p>
+                <div class="formula">\[P(\overline{A})=1-P(A)\]</div>
+                <p>Questa formula e potentissima con parole come <strong>almeno</strong>: spesso e piu facile calcolare il contrario.</p>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-7 card accent-violet">
+            <h3>E. Probabilita condizionata e prodotto</h3>
+            <p>Se so che un evento B e gia accaduto, lo spazio dei casi cambia. Non guardo piu tutto \(\Omega\), ma solo B.</p>
+            <div class="formula">\[P(A\mid B)=\frac{P(A\cap B)}{P(B)}\quad \text{con }P(B)\ne 0\]</div>
+            <div class="formula">\[P(A\cap B)=P(A)\cdot P(B\mid A)\]</div>
+            <details class="theory" open>
+              <summary>Indipendenti o dipendenti?</summary>
+              <div class="details-body">
+                <p>A e B sono <strong>indipendenti</strong> se sapere che B e avvenuto non cambia la probabilita di A:</p>
+                <div class="formula">\[P(A\mid B)=P(A)\]</div>
+                <p>In quel caso la formula del prodotto diventa:</p>
+                <div class="formula">\[P(A\cap B)=P(A)\cdot P(B)\]</div>
+                <p>Attenzione: <strong>incompatibile</strong> non significa indipendente. Se due eventi non possono accadere insieme, sapere che uno e accaduto cambia completamente la probabilita dell'altro.</p>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-5 card accent-cyan">
+            <h3>F. Diagrammi ad albero</h3>
+            <div class="tree" aria-label="Esempio di albero probabilistico">
+              <div class="tree-row">
+                <div class="node">Inizio</div>
+                <div class="node">Rossa \(\frac{3}{5}\)</div>
+                <div class="node">Non rossa \(\frac{2}{5}\)</div>
+              </div>
+              <div class="tree-row">
+                <div class="node">2a estrazione</div>
+                <div class="node">Rossa dopo rossa \(\frac{2}{4}\)</div>
+                <div class="node">Rossa dopo non rossa \(\frac{3}{4}\)</div>
+              </div>
+            </div>
+            <details class="theory" open>
+              <summary>Come si legge un albero</summary>
+              <div class="details-body">
+                <p>Lungo un ramo si moltiplica. Tra rami alternativi si somma. Con estrazioni senza reinserimento, le probabilita dei rami cambiano dopo ogni estrazione.</p>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-6 card accent-mint">
+            <h3>G. Probabilita frequentista e statistica</h3>
+            <p>Quando non posso contare a priori i casi equiprobabili, posso osservare molte prove ripetute nelle stesse condizioni.</p>
+            <div class="formula">\[P(E)\approx f_r(E)=\frac{\text{numero di volte in cui E accade}}{\text{numero totale di prove}}\]</div>
+            <details class="theory">
+              <summary>Legge dei grandi numeri</summary>
+              <div class="details-body">
+                <p>Se un esperimento e ripetuto molte volte nelle stesse condizioni, la frequenza relativa di un evento tende ad avvicinarsi alla sua probabilita teorica. Non significa che dopo pochi lanci “deve compensare”: le oscillazioni locali sono normali.</p>
+              </div>
+            </details>
+          </article>
+
+          <article class="span-6 card accent-amber">
+            <h3>H. Probabilita soggettiva e assiomi</h3>
+            <p>In alcune situazioni non posso ripetere l'esperimento e non posso contare casi equiprobabili: una partita, una previsione economica, una scelta strategica.</p>
+            <details class="theory">
+              <summary>Che cosa resta sempre vero?</summary>
+              <div class="details-body">
+                <p>Una valutazione soggettiva deve comunque essere coerente: non puo assegnare probabilita negative, l'evento certo vale 1, e per eventi incompatibili le probabilita si sommano.</p>
+                <div class="formula">\[P(\Omega)=1,\qquad P(A)\ge 0,\qquad A\cap B=\varnothing \Rightarrow P(A\cup B)=P(A)+P(B)\]</div>
+              </div>
+            </details>
+          </article>
+        </div>
+      </section>
+
+      <section id="metodi">
+        <div class="section-head">
+          <div>
+            <h2>3. Metodi rapidi</h2>
+            <p class="lead">Queste sono le mosse operative da usare negli esercizi: decidere il modello vale quanto fare i conti.</p>
+          </div>
+          <span class="pill">Strategie</span>
+        </div>
+        <div class="grid">
+          <div class="span-4 card accent-cyan">
+            <h3>Metodo 1: tabella</h3>
+            <p>Usala quando ci sono due scelte indipendenti o due oggetti: due dadi, due monete, colore e numero.</p>
+            <p class="callout">Se la tabella ha \(m\) righe e \(n\) colonne, i casi possibili sono spesso \(m\cdot n\).</p>
+          </div>
+          <div class="span-4 card accent-mint">
+            <h3>Metodo 2: contrario</h3>
+            <p>Parole chiave: almeno uno, non tutti, nessuno, al massimo.</p>
+            <div class="formula">\[P(\text{almeno uno})=1-P(\text{nessuno})\]</div>
+          </div>
+          <div class="span-4 card accent-pink">
+            <h3>Metodo 3: albero</h3>
+            <p>Usalo quando le prove avvengono in sequenza: estrazioni, passaggi, controlli, tentativi successivi.</p>
+            <p class="callout">Lungo i rami moltiplichi; tra percorsi alternativi sommi.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="esercizi">
+        <div class="section-head">
+          <div>
+            <h2>4. Schede esercizi</h2>
+            <p class="lead">Gli esercizi sono ordinati per difficolta. Ogni scheda ha soluzione e approfondimento teorico a comparsa. L'obiettivo e arrivare a riconoscere il modello prima della formula.</p>
+          </div>
+          <span class="pill">36 esercizi</span>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="Livelli esercizi">
+          <button class="tab-btn active" type="button" data-tab="guidati">Guidati</button>
+          <button class="tab-btn" type="button" data-tab="semplici">Semplici</button>
+          <button class="tab-btn" type="button" data-tab="intermedi">Intermedi</button>
+          <button class="tab-btn" type="button" data-tab="difficili">Difficili</button>
+        </div>
+
+        <div id="guidati" class="grid exercise-set active">
+          <details class="exercise span-6" open>
+            <summary>G1. Dado e spazio campionario</summary>
+            <div class="exercise-content">
+              <div class="tagline"><span class="pill">guidato</span><span class="pill">eventi</span></div>
+              <p>Lancio un dado regolare. Scrivi \(\Omega\), l'evento \(A=\) “esce un numero pari” e calcola \(P(A)\).</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">Elenca prima tutti i risultati possibili, poi scegli quelli favorevoli.</div></details>
+              <div class="solution">
+                <ol class="steps">
+                  <li>\(\Omega=\{1,2,3,4,5,6\}\).</li>
+                  <li>I numeri pari sono \(2,4,6\), quindi \(A=\{2,4,6\}\).</li>
+                  <li>I casi favorevoli sono 3 su 6: \(P(A)=\frac{3}{6}=\frac{1}{2}\).</li>
+                </ol>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G2. Carta da un mazzo italiano</summary>
+            <div class="exercise-content">
+              <div class="tagline"><span class="pill">guidato</span><span class="pill">classica</span></div>
+              <p>Da un mazzo italiano di 40 carte estraggo una carta. Calcola la probabilita che sia un asso.</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">In un mazzo italiano ci sono 4 semi, quindi 4 assi.</div></details>
+              <div class="solution">
+                <p>\(P(\text{asso})=\frac{4}{40}=\frac{1}{10}=10\%\).</p>
+                <p class="print-note">Approfondimento: il modello e classico perche le carte coperte e ben mescolate sono equiprobabili.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G3. Evento contrario</summary>
+            <div class="exercise-content">
+              <p>In un sacchetto ci sono 7 gettoni rossi e 3 blu. Estrai un gettone. Calcola la probabilita che non sia rosso.</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">“Non rosso” e il contrario di “rosso”, oppure coincide con “blu”.</div></details>
+              <div class="solution">
+                <p>Totale \(10\). Casi favorevoli \(3\). Quindi \(P(\text{non rosso})=\frac{3}{10}\).</p>
+                <p>Con il contrario: \(P(\overline{R})=1-P(R)=1-\frac{7}{10}=\frac{3}{10}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G4. Due eventi incompatibili</summary>
+            <div class="exercise-content">
+              <p>Si lancia un dado. Calcola la probabilita che esca 1 oppure 6.</p>
+              <div class="solution">
+                <p>Gli eventi “esce 1” ed “esce 6” sono incompatibili. Quindi:</p>
+                <div class="formula">\[P(1\cup 6)=\frac{1}{6}+\frac{1}{6}=\frac{2}{6}=\frac{1}{3}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G5. Due monete: evita il falso \(\frac{1}{3}\)</summary>
+            <div class="exercise-content">
+              <p>Lancio due monete. Calcola la probabilita di ottenere esattamente una testa.</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">Scrivi gli esiti ordinati: \(TT,TC,CT,CC\).</div></details>
+              <div class="solution">
+                <p>Gli esiti equiprobabili sono 4. Esattamente una testa accade in \(TC\) e \(CT\), quindi:</p>
+                <div class="formula">\[P=\frac{2}{4}=\frac{1}{2}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G6. Prima estrazione senza reinserimento</summary>
+            <div class="exercise-content">
+              <p>Un'urna contiene 5 palline bianche e 4 nere. Estrai due palline senza reinserimento. Calcola la probabilita che siano entrambe bianche.</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">La seconda probabilita cambia: dopo una bianca restano 4 bianche su 8 palline.</div></details>
+              <div class="solution">
+                <div class="formula">\[P(B_1\cap B_2)=\frac{5}{9}\cdot\frac{4}{8}=\frac{20}{72}=\frac{5}{18}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G7. Riconosci il modello</summary>
+            <div class="exercise-content">
+              <p>In una scatola ci sono 4 cavi USB-C, 3 cavi HDMI e 5 cavi Ethernet. Ne scegli uno a caso. Quale modello usi e qual e la probabilita di scegliere un cavo HDMI?</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">Tutti i cavi sono scelti con la stessa probabilita: puoi usare la definizione classica.</div></details>
+              <div class="solution">
+                <p>Totale \(4+3+5=12\). Casi favorevoli \(3\). Quindi \(P(\text{HDMI})=\frac{3}{12}=\frac{1}{4}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>G8. Dal linguaggio agli insiemi</summary>
+            <div class="exercise-content">
+              <p>Con un dado, siano \(A=\) “esce un numero maggiore di 3” e \(B=\) “esce un numero pari”. Scrivi \(A\), \(B\), \(A\cap B\), \(A\cup B\).</p>
+              <details class="theory"><summary>Hint</summary><div class="details-body">“E” significa intersezione; “oppure” significa unione.</div></details>
+              <div class="solution">
+                <p>\(A=\{4,5,6\}\), \(B=\{2,4,6\}\). Quindi \(A\cap B=\{4,6\}\) e \(A\cup B=\{2,4,5,6\}\).</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div id="semplici" class="grid exercise-set">
+          <details class="exercise span-6">
+            <summary>S1. Palline colorate</summary>
+            <div class="exercise-content">
+              <p>Un sacchetto contiene 6 palline verdi, 5 gialle e 9 rosse. Estrai una pallina. Calcola \(P(\text{verde})\), \(P(\text{gialla o rossa})\), \(P(\text{non rossa})\).</p>
+              <div class="solution">
+                <p>Totale \(20\). \(P(V)=\frac{6}{20}=\frac{3}{10}\). \(P(G\cup R)=\frac{5+9}{20}=\frac{7}{10}\). \(P(\overline{R})=1-\frac{9}{20}=\frac{11}{20}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S2. Numeri da 1 a 20</summary>
+            <div class="exercise-content">
+              <p>Scelgo a caso un numero intero da 1 a 20. Calcola la probabilita che sia multiplo di 3 oppure multiplo di 5.</p>
+              <div class="solution">
+                <p>Multipli di 3: \(3,6,9,12,15,18\), quindi 6. Multipli di 5: \(5,10,15,20\), quindi 4. Intersezione: \(15\), quindi 1.</p>
+                <div class="formula">\[P=\frac{6+4-1}{20}=\frac{9}{20}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S3. Password breve</summary>
+            <div class="exercise-content">
+              <p>Una password e formata da una lettera tra A, B, C seguita da una cifra da 0 a 9. Quante password sono possibili? Qual e la probabilita che inizi con B?</p>
+              <div class="solution">
+                <p>Le password possibili sono \(3\cdot 10=30\). Quelle che iniziano con B sono 10. Quindi \(P=\frac{10}{30}=\frac{1}{3}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S4. Somma con due dadi</summary>
+            <div class="exercise-content">
+              <p>Lancio due dadi. Calcola la probabilita che la somma sia 8.</p>
+              <div class="solution">
+                <p>Casi favorevoli: \((2,6),(3,5),(4,4),(5,3),(6,2)\), cioe 5 casi su 36.</p>
+                <div class="formula">\[P(\text{somma }8)=\frac{5}{36}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S5. Qualita in officina</summary>
+            <div class="exercise-content">
+              <p>In un lotto ci sono 80 pezzi corretti e 20 difettosi. Se ne sceglie uno a caso, qual e la probabilita che sia corretto? E difettoso?</p>
+              <div class="solution">
+                <p>Totale \(100\). \(P(C)=\frac{80}{100}=0{,}8=80\%\). \(P(D)=\frac{20}{100}=0{,}2=20\%\).</p>
+                <p class="print-note">Contesto meccanico: e un modello base di controllo qualita.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S6. Evento certo o impossibile?</summary>
+            <div class="exercise-content">
+              <p>Da un dado regolare calcola la probabilita di ottenere un numero minore di 7, maggiore di 6, dispari.</p>
+              <div class="solution">
+                <p>Minore di 7: evento certo, \(P=1\). Maggiore di 6: evento impossibile, \(P=0\). Dispari: \(1,3,5\), quindi \(P=\frac{3}{6}=\frac{1}{2}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S7. Estrazione con reinserimento</summary>
+            <div class="exercise-content">
+              <p>Un'urna contiene 2 palline rosse e 3 blu. Estrai una pallina, la rimetti nell'urna, poi estrai di nuovo. Calcola la probabilita di due rosse.</p>
+              <div class="solution">
+                <p>Con reinserimento le prove sono indipendenti: \(P(RR)=\frac{2}{5}\cdot\frac{2}{5}=\frac{4}{25}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S8. Frequenza relativa</summary>
+            <div class="exercise-content">
+              <p>In 250 lanci di una puntina, cade con la punta verso l'alto 82 volte. Stima la probabilita dell'evento.</p>
+              <div class="solution">
+                <div class="formula">\[f_r=\frac{82}{250}=0{,}328=32{,}8\%\]</div>
+                <p class="print-note">Questa e una stima frequentista: dipende dai dati raccolti.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S9. Numeri primi sul dado</summary>
+            <div class="exercise-content">
+              <p>Lancio un dado. Calcola la probabilita che esca un numero primo.</p>
+              <div class="solution">
+                <p>I numeri primi tra 1 e 6 sono \(2,3,5\). I casi favorevoli sono 3 su 6, quindi \(P=\frac{3}{6}=\frac{1}{2}\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>S10. Percentuali e frazioni</summary>
+            <div class="exercise-content">
+              <p>Un evento ha probabilita \(35\%\). Scrivila come numero decimale e come frazione ridotta.</p>
+              <div class="solution">
+                <p>\(35\%=0{,}35=\frac{35}{100}=\frac{7}{20}\).</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div id="intermedi" class="grid exercise-set">
+          <details class="exercise span-6">
+            <summary>I1. Eventi compatibili</summary>
+            <div class="exercise-content">
+              <p>Da un mazzo italiano di 40 carte estraggo una carta. Calcola la probabilita che sia una coppe oppure una figura, sapendo che le figure sono fante, cavallo e re.</p>
+              <div class="solution">
+                <p>Coppe: 10 carte. Figure: \(3\cdot 4=12\). Figure di coppe: 3.</p>
+                <div class="formula">\[P=\frac{10+12-3}{40}=\frac{19}{40}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I2. Almeno un successo</summary>
+            <div class="exercise-content">
+              <p>Un componente ha probabilita \(0{,}92\) di funzionare. Due componenti indipendenti sono montati in parallelo: il sistema funziona se almeno uno funziona. Calcola la probabilita che il sistema funzioni.</p>
+              <div class="solution">
+                <p>Usiamo il contrario: il sistema non funziona solo se entrambi non funzionano.</p>
+                <div class="formula">\[P=1-(0{,}08)^2=1-0{,}0064=0{,}9936\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I3. Senza reinserimento: colori diversi</summary>
+            <div class="exercise-content">
+              <p>Un'urna contiene 4 rosse e 6 blu. Estrai due palline senza reinserimento. Calcola la probabilita che siano di colore diverso.</p>
+              <div class="solution">
+                <p>Due percorsi: prima rossa poi blu, oppure prima blu poi rossa.</p>
+                <div class="formula">\[P=\frac{4}{10}\cdot\frac{6}{9}+\frac{6}{10}\cdot\frac{4}{9}=\frac{48}{90}=\frac{8}{15}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I4. Condizionata con una classe</summary>
+            <div class="exercise-content">
+              <p>In una classe ci sono 12 studenti di informatica e 8 di meccanica. Tra gli informatici 5 praticano sport; tra i meccanici 6 praticano sport. Scelto uno studente sportivo, qual e la probabilita che sia di meccanica?</p>
+              <div class="solution">
+                <p>Gli sportivi sono \(5+6=11\). Tra questi, 6 sono di meccanica.</p>
+                <div class="formula">\[P(\text{meccanica}\mid \text{sport})=\frac{6}{11}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I5. Test software</summary>
+            <div class="exercise-content">
+              <p>Un programma supera il test A con probabilita \(0{,}85\) e, se supera A, supera il test B con probabilita \(0{,}90\). Calcola la probabilita che superi entrambi.</p>
+              <div class="solution">
+                <div class="formula">\[P(A\cap B)=P(A)\cdot P(B\mid A)=0{,}85\cdot 0{,}90=0{,}765\]</div>
+                <p>Quindi \(76{,}5\%\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I6. Indipendenza da verificare</summary>
+            <div class="exercise-content">
+              <p>Siano \(P(A)=0{,}4\), \(P(B)=0{,}5\), \(P(A\cap B)=0{,}2\). Gli eventi sono indipendenti?</p>
+              <div class="solution">
+                <p>Calcolo \(P(A)\cdot P(B)=0{,}4\cdot 0{,}5=0{,}2\). Poiche coincide con \(P(A\cap B)\), gli eventi sono indipendenti.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I7. Al massimo una testa</summary>
+            <div class="exercise-content">
+              <p>Lancio tre monete. Calcola la probabilita di ottenere al massimo una testa.</p>
+              <div class="solution">
+                <p>Su \(2^3=8\) esiti equiprobabili. Al massimo una testa significa 0 teste oppure 1 testa: \(CCC, TCC, CTC, CCT\), cioe 4 esiti.</p>
+                <div class="formula">\[P=\frac{4}{8}=\frac{1}{2}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I8. Probabilita totale</summary>
+            <div class="exercise-content">
+              <p>Una fabbrica usa due macchine. La macchina A produce il 60% dei pezzi e ha difettosita 2%; la macchina B produce il 40% dei pezzi e ha difettosita 5%. Qual e la probabilita che un pezzo scelto a caso sia difettoso?</p>
+              <div class="solution">
+                <p>Sommo i due percorsi “prodotto da A e difettoso” e “prodotto da B e difettoso”.</p>
+                <div class="formula">\[P(D)=0{,}60\cdot 0{,}02+0{,}40\cdot 0{,}05=0{,}012+0{,}020=0{,}032\]</div>
+                <p>Quindi \(3{,}2\%\).</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>I9. Tre tentativi indipendenti</summary>
+            <div class="exercise-content">
+              <p>Un login fallisce per errore di digitazione con probabilita \(0{,}15\). Uno studente prova 3 volte in modo indipendente. Qual e la probabilita che almeno un tentativo fallisca?</p>
+              <div class="solution">
+                <p>Uso il contrario: nessun tentativo fallisce significa tre successi di digitazione, ciascuno con probabilita \(0{,}85\).</p>
+                <div class="formula">\[P(\text{almeno un errore})=1-(0{,}85)^3=1-0{,}614125=0{,}385875\]</div>
+                <p>Circa \(38{,}6\%\).</p>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div id="difficili" class="grid exercise-set">
+          <details class="exercise span-6">
+            <summary>D1. Due dadi e indipendenza</summary>
+            <div class="exercise-content">
+              <p>Lancio due dadi. Sia \(A=\) “il primo dado mostra 2” e \(B=\) “la somma e 7”. Verifica se A e B sono indipendenti.</p>
+              <div class="solution">
+                <p>\(P(A)=\frac{6}{36}=\frac{1}{6}\). \(P(B)=\frac{6}{36}=\frac{1}{6}\). \(A\cap B\) contiene solo \((2,5)\), quindi \(P(A\cap B)=\frac{1}{36}\).</p>
+                <p>Poiche \(P(A)P(B)=\frac{1}{6}\cdot\frac{1}{6}=\frac{1}{36}\), gli eventi sono indipendenti.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D2. Tre estrazioni senza reinserimento</summary>
+            <div class="exercise-content">
+              <p>Un'urna contiene 5 palline rosse, 4 bianche e 3 nere. Estrai tre palline senza reinserimento. Calcola la probabilita di ottenerle tutte di colore diverso.</p>
+              <div class="solution">
+                <p>Scelgo una rossa, una bianca e una nera in qualunque ordine. Ci sono \(3!=6\) ordini.</p>
+                <div class="formula">\[P=6\cdot\frac{5}{12}\cdot\frac{4}{11}\cdot\frac{3}{10}=\frac{360}{1320}=\frac{3}{11}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D3. Almeno due successi</summary>
+            <div class="exercise-content">
+              <p>Un sensore rileva correttamente un difetto con probabilita \(0{,}8\). Lo stesso pezzo viene controllato da 3 sensori indipendenti. Qual e la probabilita che almeno 2 sensori rilevino il difetto?</p>
+              <div class="solution">
+                <p>Sommo “esattamente 2” e “esattamente 3”.</p>
+                <div class="formula">\[P=\binom{3}{2}(0{,}8)^2(0{,}2)+(0{,}8)^3=3\cdot0{,}64\cdot0{,}2+0{,}512=0{,}896\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D4. Bayes leggero: pezzo difettoso</summary>
+            <div class="exercise-content">
+              <p>Due macchine producono pezzi: A produce il 70% con difettosita 1%, B produce il 30% con difettosita 6%. Scelto un pezzo difettoso, qual e la probabilita che provenga da B?</p>
+              <div class="solution">
+                <p>Prima calcolo la probabilita totale di difetto:</p>
+                <div class="formula">\[P(D)=0{,}70\cdot0{,}01+0{,}30\cdot0{,}06=0{,}025\]</div>
+                <p>La parte “B e difettoso” vale \(0{,}30\cdot0{,}06=0{,}018\). Quindi:</p>
+                <div class="formula">\[P(B\mid D)=\frac{0{,}018}{0{,}025}=0{,}72\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D5. Password con vincolo</summary>
+            <div class="exercise-content">
+              <p>Una password e formata da 2 lettere scelte tra A, B, C, D seguite da 2 cifre da 0 a 9. Sono ammesse ripetizioni. Calcola la probabilita che inizi con A e finisca con una cifra pari.</p>
+              <div class="solution">
+                <p>Casi possibili: \(4^2\cdot10^2=1600\). Vincolo: prima lettera A fissata, seconda lettera 4 scelte, prima cifra 10 scelte, ultima cifra pari 5 scelte.</p>
+                <div class="formula">\[P=\frac{1\cdot4\cdot10\cdot5}{1600}=\frac{200}{1600}=\frac{1}{8}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D6. Somma o prodotto?</summary>
+            <div class="exercise-content">
+              <p>Lancio due dadi. Calcola la probabilita che la somma sia 6 oppure il prodotto sia 8.</p>
+              <div class="solution">
+                <p>Somma 6: \((1,5),(2,4),(3,3),(4,2),(5,1)\), 5 casi. Prodotto 8: \((2,4),(4,2)\), 2 casi. Intersezione: \((2,4),(4,2)\), perche hanno somma 6 e prodotto 8.</p>
+                <div class="formula">\[P=\frac{5+2-2}{36}=\frac{5}{36}\]</div>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D7. Costruisci l'informazione mancante</summary>
+            <div class="exercise-content">
+              <p>Siano \(P(A)=\frac{2}{3}\), \(P(B)=\frac{1}{2}\), \(P(A\cup B)=\frac{5}{6}\). Calcola \(P(A\cap B)\) e stabilisci se gli eventi sono indipendenti.</p>
+              <div class="solution">
+                <p>Dalla formula dell'unione:</p>
+                <div class="formula">\[\frac{5}{6}=\frac{2}{3}+\frac{1}{2}-P(A\cap B)=\frac{7}{6}-P(A\cap B)\]</div>
+                <p>Quindi \(P(A\cap B)=\frac{2}{6}=\frac{1}{3}\). Inoltre \(P(A)P(B)=\frac{2}{3}\cdot\frac{1}{2}=\frac{1}{3}\), quindi sono indipendenti.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D8. Gara di affidabilita</summary>
+            <div class="exercise-content">
+              <p>Tre moduli indipendenti hanno probabilita di guasto \(0{,}04\), \(0{,}05\), \(0{,}08\). Il sistema si blocca solo se almeno due moduli si guastano. Calcola la probabilita di blocco.</p>
+              <div class="solution">
+                <p>Sommo i casi con esattamente due guasti e con tre guasti.</p>
+                <div class="formula">\[
+P=0{,}04\cdot0{,}05\cdot0{,}92+
+0{,}04\cdot0{,}95\cdot0{,}08+
+0{,}96\cdot0{,}05\cdot0{,}08+
+0{,}04\cdot0{,}05\cdot0{,}08
+\]</div>
+                <div class="formula">\[P=0{,}00184+0{,}00304+0{,}00384+0{,}00016=0{,}00888\]</div>
+                <p>La probabilita di blocco e \(0{,}888\%\), meno dell'1%.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="exercise span-6">
+            <summary>D9. Condizionata con due dadi</summary>
+            <div class="exercise-content">
+              <p>Lancio due dadi. Sapendo che la somma e maggiore di 8, qual e la probabilita che almeno uno dei due dadi mostri 6?</p>
+              <div class="solution">
+                <p>Restringo lo spazio ai casi con somma maggiore di 8: somme 9, 10, 11, 12. I casi sono \(4+3+2+1=10\).</p>
+                <p>Tra questi, quelli con almeno un 6 sono \((3,6),(4,6),(5,6),(6,3),(6,4),(6,5),(6,6)\), cioe 7 casi.</p>
+                <div class="formula">\[P(\text{almeno un }6\mid \text{somma}\gt 8)=\frac{7}{10}\]</div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="mappa">
+        <div class="section-head">
+          <div>
+            <h2>5. Mappa finale</h2>
+            <p class="lead">Quando sei davanti a un esercizio, scegli la strada con questa piccola diagnosi.</p>
+          </div>
+          <button class="btn" type="button" onclick="window.print()">Stampa scheda</button>
+        </div>
+        <div class="grid">
+          <div class="span-4 card accent-cyan">
+            <h3>Devo contare casi?</h3>
+            <p>Usa probabilita classica se i casi elementari sono equiprobabili.</p>
+            <div class="formula">\[P(E)=\frac{f}{u}\]</div>
+          </div>
+          <div class="span-4 card accent-mint">
+            <h3>C'e “oppure”?</h3>
+            <p>Usa unione. Se c'e sovrapposizione, sottrai l'intersezione.</p>
+            <div class="formula">\[P(A\cup B)=P(A)+P(B)-P(A\cap B)\]</div>
+          </div>
+          <div class="span-4 card accent-pink">
+            <h3>C'e “e poi”?</h3>
+            <p>Usa prodotto e probabilita condizionata. Se sono indipendenti, moltiplica direttamente.</p>
+            <div class="formula">\[P(A\cap B)=P(A)P(B\mid A)\]</div>
+          </div>
+          <div class="span-6 card accent-amber">
+            <h3>C'e “almeno”?</h3>
+            <p>Prova il contrario. Spesso risparmi molti casi.</p>
+            <div class="formula">\[P(\text{almeno uno})=1-P(\text{nessuno})\]</div>
+          </div>
+          <div class="span-6 card accent-violet">
+            <h3>Ho dati osservati?</h3>
+            <p>Usa frequenza relativa e ragiona sulla stabilita della stima.</p>
+            <div class="formula">\[f_r=\frac{\text{successi osservati}}{\text{prove totali}}\]</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Materiale originale di studio e ripasso costruito dai due testi presenti nella cartella: teoria rielaborata, esempi graduati, soluzioni e simulazioni interattive.
+    </footer>
+  </div>
+
+  <script>
+    const heroCoins = document.getElementById('heroCoins');
+    ['T','C','T','T','C','T'].forEach((v) => {
+      const coin = document.createElement('div');
+      coin.className = 'coin' + (v === 'C' ? ' tail' : '');
+      coin.textContent = v;
+      heroCoins.appendChild(coin);
+    });
+
+    const dsaToggle = document.getElementById('dsaToggle');
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle.addEventListener('change', () => {
+      document.body.classList.toggle('light-mode', themeToggle.checked);
+      themeToggle.parentElement.lastChild.textContent = themeToggle.checked ? ' Modalita dark' : ' Modalita chiara';
+    });
+
+    dsaToggle.addEventListener('change', () => {
+      document.body.classList.toggle('dsa-mode', dsaToggle.checked);
+    });
+
+    document.querySelectorAll('details.exercise').forEach((exercise) => {
+      const card = document.createElement('article');
+      card.className = exercise.className.replace(/\bexercise\b/, 'exercise-card');
+
+      const summary = exercise.querySelector(':scope > summary');
+      const title = document.createElement('h3');
+      title.className = 'exercise-title';
+      title.textContent = summary ? summary.textContent : 'Esercizio';
+      card.appendChild(title);
+
+      const content = exercise.querySelector(':scope > .exercise-content');
+      if (content) {
+        content.querySelectorAll(':scope > .solution').forEach((solution) => {
+          const wrapper = document.createElement('details');
+          wrapper.className = 'theory solution-toggle';
+          const solutionSummary = document.createElement('summary');
+          solutionSummary.textContent = 'Svolgimento';
+          const body = document.createElement('div');
+          body.className = 'details-body';
+          while (solution.firstChild) body.appendChild(solution.firstChild);
+          wrapper.appendChild(solutionSummary);
+          wrapper.appendChild(body);
+          solution.replaceWith(wrapper);
+        });
+        card.appendChild(content);
+      }
+
+      exercise.replaceWith(card);
+    });
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.exercise-set');
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.tab;
+        tabButtons.forEach((b) => b.classList.toggle('active', b === button));
+        tabPanels.forEach((panel) => panel.classList.toggle('active', panel.id === target));
+        if (window.MathJax) MathJax.typesetPromise();
+      });
+    });
+
+    let totalFlips = 0;
+    let totalHeads = 0;
+    let history = [];
+    const coinCanvas = document.getElementById('coinCanvas');
+    const coinCtx = coinCanvas.getContext('2d');
+    const coinStats = document.getElementById('coinStats');
+
+    function drawCoinChart() {
+      const w = coinCanvas.width;
+      const h = coinCanvas.height;
+      coinCtx.clearRect(0, 0, w, h);
+      coinCtx.strokeStyle = 'rgba(255,255,255,0.16)';
+      coinCtx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = 20 + i * ((h - 40) / 4);
+        coinCtx.beginPath();
+        coinCtx.moveTo(34, y);
+        coinCtx.lineTo(w - 12, y);
+        coinCtx.stroke();
+      }
+      const yHalf = 20 + (1 - 0.5) * (h - 40);
+      coinCtx.strokeStyle = '#ffd166';
+      coinCtx.setLineDash([8, 8]);
+      coinCtx.beginPath();
+      coinCtx.moveTo(34, yHalf);
+      coinCtx.lineTo(w - 12, yHalf);
+      coinCtx.stroke();
+      coinCtx.setLineDash([]);
+      coinCtx.fillStyle = '#a8b3c7';
+      coinCtx.font = '14px Arial';
+      coinCtx.fillText('0,5 teorico', 42, yHalf - 8);
+      if (history.length < 2) return;
+      coinCtx.strokeStyle = '#25d7ff';
+      coinCtx.lineWidth = 3;
+      coinCtx.beginPath();
+      history.forEach((p, i) => {
+        const x = 34 + i * ((w - 52) / Math.max(1, history.length - 1));
+        const y = 20 + (1 - p) * (h - 40);
+        if (i === 0) coinCtx.moveTo(x, y);
+        else coinCtx.lineTo(x, y);
+      });
+      coinCtx.stroke();
+    }
+
+    document.getElementById('runCoins').addEventListener('click', () => {
+      const runs = Math.max(10, Math.min(5000, Number(document.getElementById('coinRuns').value) || 200));
+      for (let i = 0; i < runs; i++) {
+        totalFlips += 1;
+        if (Math.random() < 0.5) totalHeads += 1;
+        if (i % Math.max(1, Math.floor(runs / 180)) === 0 || i === runs - 1) {
+          history.push(totalHeads / totalFlips);
+        }
+      }
+      const freq = totalHeads / totalFlips;
+      coinStats.textContent = `Lanci totali: ${totalFlips}. Teste: ${totalHeads}. Frequenza relativa: ${freq.toFixed(4)}.`;
+      drawCoinChart();
+    });
+
+    document.getElementById('resetCoins').addEventListener('click', () => {
+      totalFlips = 0;
+      totalHeads = 0;
+      history = [];
+      coinStats.textContent = 'Nessun lancio ancora.';
+      drawCoinChart();
+    });
+
+    const diceTable = document.getElementById('diceTable');
+    const diceEvent = document.getElementById('diceEvent');
+    const diceResult = document.getElementById('diceResult');
+
+    function isHot(a, b, mode) {
+      if (mode === 'sum7') return a + b === 7;
+      if (mode === 'sumgt8') return a + b > 8;
+      if (mode === 'productEven') return (a * b) % 2 === 0;
+      if (mode === 'same') return a === b;
+      return false;
+    }
+
+    function renderDice() {
+      diceTable.innerHTML = '';
+      const mode = diceEvent.value;
+      let fav = 0;
+      for (let a = 1; a <= 6; a++) {
+        for (let b = 1; b <= 6; b++) {
+          const cell = document.createElement('div');
+          const hot = isHot(a, b, mode);
+          if (hot) fav += 1;
+          cell.className = 'dice-cell' + (hot ? ' hot' : '');
+          cell.textContent = `${a},${b}`;
+          diceTable.appendChild(cell);
+        }
+      }
+      diceResult.textContent = `Casi favorevoli: ${fav} su 36. Probabilita: ${fav}/36 = ${(fav / 36).toFixed(3)}.`;
+    }
+
+    diceEvent.addEventListener('change', renderDice);
+    renderDice();
+    drawCoinChart();
+  </script>
+</body>
+</html>
